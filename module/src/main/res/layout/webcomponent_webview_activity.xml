@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical" android:layout_width="match_parent"
+              android:layout_height="match_parent"
+        >
+    <include layout="@layout/common_toolbar"></include>
+    <!--android:src="@drawable/webcomponent_divider"/>-->
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:id="@+id/wb_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ProgressBar
+            android:id="@+id/pb"
+            android:layout_width="fill_parent"
+            android:layout_height="@dimen/webcomponent_progressbar_height"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:max="100"
+            android:progressDrawable="@drawable/webcomponent_progressbar_color"
+            android:visibility="gone"
+            android:layout_alignParentTop="true" />
+
+    </RelativeLayout>
+
+
+    <RelativeLayout
+            android:id="@+id/rl_exception"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+        <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true">
+
+            <ImageView
+                    android:id="@+id/iv_visitException"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true" />
+
+            <TextView
+                    android:id="@+id/tv_visit_error"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/iv_visitException"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="@dimen/webcomponent_dip_size_20"
+                    android:textColor="@color/webcomponent_tv_network_error"
+                    android:textSize="@dimen/webcomponent_text_size_14sp" />
+
+            <Button
+                    android:id="@+id/btn_retry"
+                    android:layout_width="@dimen/webcomponent_btn_retry_width"
+                    android:layout_height="@dimen/webcomponent_btn_retry_height"
+                    android:layout_below="@id/tv_visit_error"
+                    android:layout_centerHorizontal="true"
+                    android:textColor="@color/webcomponent_btn_retry_color"
+                    android:text="@string/appfactory_webview_retry"
+                    android:background="@drawable/webcomponent_retry_btn_bg"
+                    android:layout_marginTop="@dimen/webcomponent_dip_size_20" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+</LinearLayout>

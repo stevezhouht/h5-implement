@@ -1,0 +1,286 @@
+apply plugin: 'com.android.library'
+apply plugin: 'maven'
+apply from: 'http://nexus.sdp.nd/nexus/service/local/repositories/android-3rd/content/com/nd/sdp/apf/version-config/1.0.3/version-config-1.0.3.gradle'
+
+def isCompileOnPC(){
+    return (rootProject.hasProperty("compileAppfactoryOnPC") && rootProject.compileAppfactoryOnPC);
+}
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "26.0.3"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 21
+        versionName POM_VERSION
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile "src/main/AndroidManifest.xml"
+            java.srcDirs = ["src/main/java"]
+            res.srcDirs = ["src/main/res"]
+        }
+
+        instrumentTest.setRoot('src/test/')  //很重要，请勿更改
+        instrumentTest {
+            java { srcDirs = [
+                    'src/test/java'   //UT放置目录，很重要，请勿更改
+            ] }
+            res.srcDirs = ["src/main/res"]
+            assets.srcDirs = [
+                    'src/main/assets'
+            ]
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    jacoco {
+        version "0.7.7.201606060606"
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
+        unitTests.all {
+            jacoco {
+                includeNoLocationClasses = true
+            }
+        }
+    }
+
+}
+
+afterEvaluate { project ->
+    task androidJavadocs(type: Javadoc) {
+        failOnError false
+        source = android.sourceSets.main.java.source
+        options {
+            links "http://docs.oracle.com/javase/7/docs/api/"
+            linksOffline "http://d.android.com/reference", "${android.sdkDirectory}/docs/reference"
+        }
+        classpath += project.android.libraryVariants.toList().first().javaCompile.classpath
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    }
+
+    task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+        classifier = 'javadoc'
+        from androidJavadocs.destinationDir
+    }
+
+    task androidSourcesJar(type: Jar) {
+        classifier = 'sources'
+        from android.sourceSets.main.java.srcDirs
+    }
+
+    artifacts {
+        archives androidSourcesJar
+        archives androidJavadocsJar
+    }
+}
+
+configurations.all {
+    // check for updates every build
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+
+repositories {
+    maven {
+        name 'nd nexus'
+        url "http://nexus.sdp.nd/nexus/content/groups/android-public/"
+    }
+    mavenCentral()
+}
+
+android {
+    packagingOptions {
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+
+    implementation ('org.apache.httpcomponents:httpcore:4.4.4@jar'){
+        transitive = true
+        changing = true
+    }
+    implementation ('org.apache.httpcomponents:httpclient:4.5.1@jar'){
+        transitive = true
+        changing = true
+    }
+
+    implementation('com.nd.android.smartcan:smartcan-appfactory:3.3.1.7.3.smartcan.release@aar') {
+        transitive = true
+        changing = true
+        exclude group:'android.support',module:'android-support-v4'
+    }
+
+    if (isCompileOnPC()) {
+        println "========== [appfactory] compiling on pc ==========="
+        api project(':module_webview_wrapper')
+    } else {
+        println "============ [appfactory] compiling on server ==========="
+        implementation('com.nd.sdp.android:webviewwrapper:3.3.2.1.release@aar') {
+            transitive = true
+            changing = true
+        }
+
+    }
+
+    implementation ('com.android.support:appcompat-v7:24.2.1@aar'){
+        transitive = true
+        changing = true
+    }
+
+    //webview http 下载相关 begin
+    implementation('com.nd.android.sdp.common:downloadmanager:1.4.174.release@aar') {
+        exclude group: 'com.android.support'
+        exclude group: 'io.reactivex', module: 'rxjava'
+        exclude group: 'io.reactivex', module: 'rxandroid'
+        exclude group: 'com.squareup.okhttp3'
+        transitive = true
+        changing = true;
+    }
+
+    //webview http 下载相关 end
+
+    implementation('com.nd.sdp.android.common:res:0.2.1.8@aar') {
+        transitive = true
+        changing = true
+    }
+
+    implementation('com.nd.android.smartcan:smartcan-datacollection-aar:3.1.3.8.5.smartcan.release@aar') {
+        transitive = true
+        changing = true
+        exclude group: 'android.support', module: 'android-support-v4'
+    }
+
+
+    implementation('com.nd.android.smartcan:datatransfer-aar:3.1.3.8.5.smartcan.release@aar') {
+        transitive = true
+        changing = true
+        exclude group: 'android.support', module: 'android-support-v4'
+    }
+
+    implementation('com.nd.android.smartcan:smartcan-core-aar:3.1.3.8.5.smartcan.release@aar') {
+        transitive = true
+        changing = true
+        exclude group: 'android.support', module: 'android-support-v4'
+    }
+
+
+    implementation('com.nd.android.smartcan:datalayer-aar:3.1.3.8.5.smartcan.release@aar') {
+        transitive= true
+        changing = true
+        exclude group: 'android.support', module: 'android-support-v4'
+    }
+
+    implementation('com.nd.android.smartcan:framework-aar:3.1.3.8.5.smartcan.release@aar') {
+        transitive = true
+        changing = true
+        exclude group: 'android.support', module: 'android-support-v4'
+    }
+
+
+    implementation('com.nd.android.smartcan:network-aar:3.1.3.8.5.smartcan.release@aar') {
+        transitive = true
+        changing = true
+        exclude group: 'android.support', module: 'android-support-v4'
+    }
+
+
+    implementation('com.nd.android.smartcan:commons-util-aar:3.1.3.8.5.smartcan.release@aar') {
+        transitive = true
+        changing = true
+        exclude group: 'android.support', module: 'android-support-v4'
+    }
+
+    configurations {
+        all*.exclude group: 'com.nd.android.smartcan', module: 'smartcan-accountclient'
+        all*.exclude group: 'com.nd.android.smartcan', module: 'commons-util'
+        // all*.exclude group: 'com.nd.android.smartcan', module: 'commons-util-aar'
+        all*.exclude group: 'com.nd.android.smartcan', module: 'network'
+        all*.exclude group: 'com.nd.android.smartcan', module: 'framework'
+        all*.exclude group: 'com.nd.android.smartcan', module: 'datalayer'
+        all*.exclude group: 'com.nd.android.smartcan', module: 'smartcan-core'
+        all*.exclude group: 'com.nd.android.smartcan', module: 'datatransfer'
+        all*.exclude group: 'com.nd.android.smartcan', module: 'smartcan-datacollection'
+        if (isCompileOnPC()) {
+            all*.exclude group: 'com.nd.sdp.android', module: 'webviewwrapper'
+        }
+    }
+
+    //sonar 脚本
+    testImplementation('junit:junit:4.12') {
+        transitive = true
+        changing = true
+    }
+
+    testImplementation("com.nd.sdp.android:mock-test:1.1.8-features-cq-test-SNAPSHOT@aar") {
+        transitive = true
+        changing = true
+        exclude group: 'com.nd.sdp.android', module: 'h5-implement'
+    }
+    testImplementation("org.robolectric:robolectric:3.1.4") {
+        transitive = true
+        changing = true
+
+    }
+
+    testImplementation ('io.reactivex:rxjava:1.3.0'){
+        transitive = true
+        changing = true
+    }
+}
+
+//sonar 脚本
+apply plugin: 'jacoco'
+apply plugin: 'org.sonarqube'
+
+sonarqube  {
+    properties  {
+        property "sonar.projectKey", POM_GROUP_ID+'.'+POM_ARTIFACT_ID // 项目名称，记得修改
+        property "sonar.projectName",  POM_ARTIFACT_ID // 项目名称，记得修改
+        property "sonar.projectVersion", POM_VERSION  // 项目版本，记得修改
+        property "sonar.language", "java"
+        property "sonar.host.url", "http://sonar.sdp.nd/"
+        //       property "sonar.profile", "appfactory-module-lint"
+        //本地跑需要把sonar.host.url配置成http://sonar.debug.sdp.nd:8080/
+        //appfactory-module-lint没配置，需要把sonar.profile配置成android.sdp.nd
+        //property "sonar.host.url", "http://sonar.debug.sdp.nd:8080/"
+        property "sonar.profile", "android.sdp.nd"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.dynamicAnalysis", "reuseReports"
+        property "sonar.sources", "src/main/java/com/nd/smartcan/appfactory/script/webkit/impl"
+        property "sonar.tests", android.sourceSets.instrumentTest.java.srcDirs
+        property 'sonar.import_unknown_files', true
+        property "sonar.test.binaries", "${buildDir}/intermediates/classes/release"
+        property "sonar.java.binaries", "${buildDir}/intermediates/classes/release"
+        property 'sonar.android.lint.reportsPath', "${buildDir}/outputs/lint-results.xml"  //添加android lint检查报告输出
+        property 'sonar.jacoco.reportPath', "${buildDir}/jacoco/testReleaseUnitTest.exec"
+        property "sonar.jacoco.itReportPath", "$buildDir/jacoco/testReleaseUnitTest.exec"
+        property 'sonar.junit.reportsPath', "${buildDir}/test-results/testReleaseUnitTest/release"
+        property 'sonar.surefire.reportsPath', "${buildDir}/test-results/testReleaseUnitTest/release"
+        property "sonar.cobertura.reportPath", "${buildDir}/reports/coverage/debug/report.xml"
+        property "sonar.core.codeCoveragePlugin", "cobertura"
+
+        property "sonar.java.libraries", android.libraryVariants.javaCompile.classpath + "${android.sdkDirectory}/platforms/${android.compileSdkVersion}"+"${System.properties.'java.home'}/lib"
+        property "sonar.java.test.libraries", android.libraryVariants.javaCompile.classpath + "${android.sdkDirectory}/platforms/${android.compileSdkVersion}"+"${System.properties.'java.home'}/lib"
+
+        property "sonar.login", SONAR_USERNAME
+        property "sonar.password", SONAR_PASSWORD
+    }
+}//sonar 脚本--end
